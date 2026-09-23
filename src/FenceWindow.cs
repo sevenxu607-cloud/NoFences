@@ -5,9 +5,9 @@ using Peter;
 using System;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using static NoFences.Win32.WindowUtil;
-
 namespace NoFences
 {
     public partial class FenceWindow : Form
@@ -17,7 +17,7 @@ namespace NoFences
         private const int titleOffset = 3;
         private const int itemWidth = 75;
         private const int itemHeight = 32 + itemPadding + textHeight;
-        private const int textHeight = 35;
+        private const int textHeight = 50;
         private const int itemPadding = 15;
         private const float shadowDist = 1.5f;
 
@@ -60,23 +60,27 @@ namespace NoFences
             WindowUtil.HideFromAltTab(Handle);
             DesktopUtil.GlueToDesktop(Handle);
             //DesktopUtil.PreventMinimize(Handle);
-            logicalTitleHeight = (fenceInfo.TitleHeight < 16 || fenceInfo.TitleHeight > 100) ? 35 : fenceInfo.TitleHeight;
+            logicalTitleHeight = (fenceInfo.TitleHeight < 16 || fenceInfo.TitleHeight > 100) ? 50 : fenceInfo.TitleHeight;
             titleHeight = LogicalToDeviceUnits(logicalTitleHeight);
-            
             this.MouseWheel += FenceWindow_MouseWheel;
             thumbnailProvider.IconThumbnailLoaded += ThumbnailProvider_IconThumbnailLoaded;
+            this.Resize += FenceWindow_Resize;
 
             ReloadFonts();
 
             AllowDrop = true;
-
-
+            this.DragEnter += FenceWindow_DragEnter;
+            this.DragDrop += FenceWindow_DragDrop;
+            this.DragLeave += FenceWindow_DragLeave;
+            this.MouseDown += FenceWindow_MouseDown;
+            this.MouseUp += FenceWindow_MouseUp;
             this.fenceInfo = fenceInfo;
             Text = fenceInfo.Name;
             Location = new Point(fenceInfo.PosX, fenceInfo.PosY);
 
             Width = fenceInfo.Width;
             Height = fenceInfo.Height;
+            ApplyRoundedCorners(12);
 
             prevHeight = Height;
             lockedToolStripMenuItem.Checked = fenceInfo.Locked;
@@ -103,7 +107,7 @@ namespace NoFences
             }
 
             // Prevent maximize
-            if ((m.Msg == WM_SYSCOMMAND) && m.WParam.ToInt32() == 0xF032)
+            if (m.Msg == WM_SYSCOMMAND && (m.WParam.ToInt64() & 0xFFFF) == 0xF032)
             {
                 m.Result = IntPtr.Zero;
                 return;
@@ -124,12 +128,16 @@ namespace NoFences
                 return;
 
             // Then, allow dragging and resizing
+
             if (m.Msg == WM_NCHITTEST)
             {
+                long lp = m.LParam.ToInt64();
+                int x = (short)(lp & 0xFFFF);
+                int y = (short)((lp >> 16) & 0xFFFF);
 
-                var pt = PointToClient(new Point(m.LParam.ToInt32()));
+                var pt = PointToClient(new Point(x, y));
 
-                if ((int)m.Result == HTCLIENT && pt.Y < titleHeight)     // drag the form
+                if ((int)m.Result == HTCLIENT && pt.Y < titleHeight)
                 {
                     m.Result = (IntPtr)HTCAPTION;
                     FenceWindow_MouseEnter(null, null);
@@ -150,6 +158,78 @@ namespace NoFences
                 else if (pt.X > (Width - 10))
                     m.Result = new IntPtr(HTRIGHT);
             }
+
+        } // end 
+        private Point mouseDownPos;
+        private bool mouseDown = false;
+
+        private void FenceWindow_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                mouseDown = true;
+                mouseDownPos = MousePosition; // screen coords
+            }
+        }
+
+        private void FenceWindow_MouseUp(object sender, MouseEventArgs e)
+        {
+            mouseDown = false;
+        }
+
+        private bool IsDragStart(Point currentScreenPos)
+        {
+            return mouseDown &&
+                   (Math.Abs(currentScreenPos.X - mouseDownPos.X) > 4 ||
+                    Math.Abs(currentScreenPos.Y - mouseDownPos.Y) > 4);
+        }
+
+
+        private bool isDraggingItem = false;
+        private string dragItemPath = null;
+        private bool IsShortcut(string path)
+        {
+            return Path.GetExtension(path).Equals(".lnk", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private string GetDroppedShortcutPath(DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent("FileDrop"))
+            {
+                var files = (string[])e.Data.GetData("FileDrop");
+                foreach (var file in files)
+                {
+                    if (IsShortcut(file))
+                        return file;
+                }
+            }
+
+            return null;
+        }
+        private void FenceWindow_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                e.Effect = DragDropEffects.Move;
+            else
+                e.Effect = DragDropEffects.None;
+        }
+        private void FenceWindow_DragLeave(object sender, EventArgs e)
+        {
+            if (dragItemPath != null)
+            {
+                var fileName = Path.GetFileName(dragItemPath);
+
+                // Remove any old entries with the same filename
+                var toRemove = fenceInfo.Files
+                    .Where(f => Path.GetFileName(f) == fileName)
+                    .ToList();
+
+                foreach (var f in toRemove)
+                    fenceInfo.Files.Remove(f);
+
+                Save();
+                Refresh();
+            }
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -160,6 +240,16 @@ namespace NoFences
                 Close();
             }
         }
+        private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+        private void FenceWindow_Resize(object sender, EventArgs e)
+        {
+            ApplyRoundedCorners(12);
+        }
+        public enum ThemeMode { Light, Dark, Custom }
+        public ThemeMode Theme { get; set; }
 
         private void deleteItemToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -174,33 +264,60 @@ namespace NoFences
             deleteItemToolStripMenuItem.Visible = hoveringItem != null;
         }
 
-        private void FenceWindow_DragEnter(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop) && !lockedToolStripMenuItem.Checked)
-                e.Effect = DragDropEffects.Move;
-        }
-
         private void FenceWindow_DragDrop(object sender, DragEventArgs e)
         {
+            var fenceFolder = FenceManager.Instance.GetFolderPath(fenceInfo);
+            Directory.CreateDirectory(fenceFolder);
+
+            // Check if a shortcut was dropped
+            var shortcutPath = GetDroppedShortcutPath(e);
+
+            if (shortcutPath != null)
+            {
+                // Move the .lnk file itself
+                var fileName = Path.GetFileName(shortcutPath);
+                var newPath = Path.Combine(fenceFolder, fileName);
+
+                File.Move(shortcutPath, newPath);
+                fenceInfo.Files.Add(newPath);
+
+                Save();
+                Refresh();
+                return;
+            }
+
+            // Normal file handling (non-shortcuts)
             var dropped = (string[])e.Data.GetData(DataFormats.FileDrop);
-            foreach (var file in dropped)
-                if (!fenceInfo.Files.Contains(file) && ItemExists(file))
-                    fenceInfo.Files.Add(file);
+
+            foreach (var originalPath in dropped)
+            {
+                var fileName = Path.GetFileName(originalPath);
+                var newPath = Path.Combine(fenceFolder, fileName);
+
+                // Prevent crash if file doesn't exist locally
+                if (!File.Exists(originalPath))
+                {
+                    MessageBox.Show(
+                        $"Source file not available: {originalPath}",
+                        "File not available",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    continue;
+                }
+
+                File.Move(originalPath, newPath);
+                fenceInfo.Files.Add(newPath);
+            }
+
+
             Save();
             Refresh();
         }
 
-        private void FenceWindow_Resize(object sender, EventArgs e)
-        {
-            throttledResize.Run(() =>
-            {
-                fenceInfo.Width = Width;
-                fenceInfo.Height = isMinified ? prevHeight : Height;
-                Save();
-            });
 
-            Refresh();
-        }
+
+
 
         private void FenceWindow_MouseMove(object sender, MouseEventArgs e)
         {
@@ -265,18 +382,21 @@ namespace NoFences
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
             // Background
-            e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, Color.Black)), ClientRectangle);
+            e.Graphics.Clear(Color.FromArgb(0,255,255,255)); // dark grey
+
 
             // Title
             e.Graphics.DrawString(Text, titleFont, Brushes.White, new PointF(Width / 2, titleOffset), new StringFormat { Alignment = StringAlignment.Center });
-            e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(50, Color.Black)), new RectangleF(0, 0, Width, titleHeight));
+            e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(25,255,255,255)), new RectangleF(0, 0, Width, titleHeight));
 
             // Items
             var x = itemPadding;
             var y = itemPadding;
             scrollHeight = 0;
             e.Graphics.Clip = new Region(new Rectangle(0, titleHeight, Width, Height - titleHeight));
-            foreach (var file in fenceInfo.Files)
+            var files = fenceInfo.Files.ToList(); // copy the list
+
+            foreach (var file in files)
             {
                 var entry = FenceEntry.FromPath(file);
                 if (entry == null)
@@ -296,6 +416,7 @@ namespace NoFences
                 }
             }
 
+
             scrollHeight -= (ClientRectangle.Height - titleHeight);
 
             // Scroll bars
@@ -303,7 +424,7 @@ namespace NoFences
             {
                 var contentHeight = Height - titleHeight;
                 var scrollbarHeight = contentHeight - scrollHeight;
-                e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(150, Color.Black)), new Rectangle(Width - 5, titleHeight + scrollOffset, 5, scrollbarHeight));
+                e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(240, 240, 240)), new Rectangle(Width - 5, titleHeight + scrollOffset, 5, scrollbarHeight));
 
                 scrollOffset = Math.Min(scrollOffset, scrollHeight);
             }
@@ -323,11 +444,16 @@ namespace NoFences
             hasHoverUpdated = false;
         }
 
+
         private void RenderEntry(Graphics g, FenceEntry entry, int x, int y)
         {
             var icon = entry.ExtractIcon(thumbnailProvider);
             var name = entry.Name;
-
+            // Hard cap: max 10 characters, then ellipsis
+            if (!string.IsNullOrEmpty(name) && name.Length > 6)
+            {
+                name = name.Substring(0, 6) + "...";
+            }
             var textPosition = new PointF(x, y + icon.Height + 5);
             var textMaxSize = new SizeF(itemWidth, textHeight);
 
@@ -357,6 +483,19 @@ namespace NoFences
             {
                 shouldRunDoubleClick = false;
                 entry.Open();
+            }
+            // Start drag-out
+            if (mouseOver && Control.MouseButtons == MouseButtons.Left &&
+            !isDraggingItem && IsDragStart(MousePosition))
+
+            {
+                isDraggingItem = true;
+                dragItemPath = entry.Path;
+
+                DoDragDrop(new DataObject(DataFormats.FileDrop, new[] { entry.Path }), DragDropEffects.Move);
+
+                isDraggingItem = false;
+                dragItemPath = null;
             }
 
             if (selectedItem == entry.Path)
@@ -438,7 +577,17 @@ namespace NoFences
         {
 
         }
+        private void ApplyRoundedCorners(int radius)
+        {
+            var path = new System.Drawing.Drawing2D.GraphicsPath();
+            path.AddArc(0, 0, radius, radius, 180, 90);
+            path.AddArc(Width - radius, 0, radius, radius, 270, 90);
+            path.AddArc(Width - radius, Height - radius, radius, radius, 0, 90);
+            path.AddArc(0, Height - radius, radius, radius, 90, 90);
+            path.CloseFigure();
 
+            Region = new Region(path);
+        }
         private void titleSizeToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var dialog = new HeightDialog(fenceInfo.TitleHeight);

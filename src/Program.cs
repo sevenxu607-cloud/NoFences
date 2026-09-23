@@ -1,8 +1,8 @@
 ﻿using NoFences.Model;
+using NoFences.Win32;
 using System;
 using System.Threading;
 using System.Windows.Forms;
-using NoFences.Win32;
 
 namespace NoFences
 {

@@ -40,7 +40,9 @@
     <StartupObject>NoFences.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
+    <Reference Include="System">
+      <HintPath>..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -58,6 +60,12 @@
     </Compile>
     <Compile Include="EditDialog.Designer.cs">
       <DependentUpon>EditDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FenceSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FenceSettings.Designer.cs">
+      <DependentUpon>FenceSettings.cs</DependentUpon>
     </Compile>
     <Compile Include="HeightDialog.cs">
       <SubType>Form</SubType>
@@ -96,7 +104,13 @@
     <EmbeddedResource Include="EditDialog.zh-CN.resx">
       <DependentUpon>EditDialog.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FenceSettings.resx">
+      <DependentUpon>FenceSettings.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FenceWindow.cs.resx">
+      <DependentUpon>FenceWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FenceWindow.en.resx">
       <DependentUpon>FenceWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FenceWindow.resx">

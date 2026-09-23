@@ -1,0 +1,23 @@
+{
+  "url": "https://conda.anaconda.org/conda-forge/linux-64/repodata.json.zst",
+  "etag": "\"d0926c3d7da34a7eab754f37606f4963\"",
+  "mod": "Mon, 14 Sep 2026 03:06:15 GMT",
+  "cache_control": "public, max-age=1200",
+  "mtime_ns": 1789356863173671400,
+  "size": 444755406,
+  "blake2_hash": "92f914f5df1737af5dadaea6bdd111c0229b19886c0c242b14185c616effe377",
+  "blake2_hash_nominal": "92f914f5df1737af5dadaea6bdd111c0229b19886c0c242b14185c616effe377",
+  "has_zst": {
+    "value": true,
+    "last_checked": "2026-09-14T03:33:40.374739300Z"
+  },
+  "has_bz2": {
+    "value": true,
+    "last_checked": "2026-09-14T03:33:40.417184800Z"
+  },
+  "has_jlap": {
+    "value": false,
+    "last_checked": "2026-09-14T03:33:40.368052100Z"
+  },
+  "jlap": null
+}
