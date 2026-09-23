@@ -33,12 +33,12 @@
             this.appContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.deleteItemToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.newFenceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.titleSizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.renameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.minifyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lockedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.minifyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.renameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.titleSizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.newFenceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.appContextMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -70,29 +70,12 @@
             resources.ApplyResources(this.toolStripSeparator1, "toolStripSeparator1");
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             // 
-            // exitToolStripMenuItem
+            // lockedToolStripMenuItem
             // 
-            resources.ApplyResources(this.exitToolStripMenuItem, "exitToolStripMenuItem");
-            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
-            // 
-            // newFenceToolStripMenuItem
-            // 
-            resources.ApplyResources(this.newFenceToolStripMenuItem, "newFenceToolStripMenuItem");
-            this.newFenceToolStripMenuItem.Name = "newFenceToolStripMenuItem";
-            this.newFenceToolStripMenuItem.Click += new System.EventHandler(this.newFenceToolStripMenuItem_Click);
-            // 
-            // titleSizeToolStripMenuItem
-            // 
-            resources.ApplyResources(this.titleSizeToolStripMenuItem, "titleSizeToolStripMenuItem");
-            this.titleSizeToolStripMenuItem.Name = "titleSizeToolStripMenuItem";
-            this.titleSizeToolStripMenuItem.Click += new System.EventHandler(this.titleSizeToolStripMenuItem_Click);
-            // 
-            // renameToolStripMenuItem
-            // 
-            resources.ApplyResources(this.renameToolStripMenuItem, "renameToolStripMenuItem");
-            this.renameToolStripMenuItem.Name = "renameToolStripMenuItem";
-            this.renameToolStripMenuItem.Click += new System.EventHandler(this.renameToolStripMenuItem_Click);
+            resources.ApplyResources(this.lockedToolStripMenuItem, "lockedToolStripMenuItem");
+            this.lockedToolStripMenuItem.CheckOnClick = true;
+            this.lockedToolStripMenuItem.Name = "lockedToolStripMenuItem";
+            this.lockedToolStripMenuItem.Click += new System.EventHandler(this.lockedToolStripMenuItem_Click);
             // 
             // minifyToolStripMenuItem
             // 
@@ -101,12 +84,29 @@
             this.minifyToolStripMenuItem.Name = "minifyToolStripMenuItem";
             this.minifyToolStripMenuItem.Click += new System.EventHandler(this.minifyToolStripMenuItem_Click);
             // 
-            // lockedToolStripMenuItem
+            // renameToolStripMenuItem
             // 
-            resources.ApplyResources(this.lockedToolStripMenuItem, "lockedToolStripMenuItem");
-            this.lockedToolStripMenuItem.CheckOnClick = true;
-            this.lockedToolStripMenuItem.Name = "lockedToolStripMenuItem";
-            this.lockedToolStripMenuItem.Click += new System.EventHandler(this.lockedToolStripMenuItem_Click);
+            resources.ApplyResources(this.renameToolStripMenuItem, "renameToolStripMenuItem");
+            this.renameToolStripMenuItem.Name = "renameToolStripMenuItem";
+            this.renameToolStripMenuItem.Click += new System.EventHandler(this.renameToolStripMenuItem_Click);
+            // 
+            // titleSizeToolStripMenuItem
+            // 
+            resources.ApplyResources(this.titleSizeToolStripMenuItem, "titleSizeToolStripMenuItem");
+            this.titleSizeToolStripMenuItem.Name = "titleSizeToolStripMenuItem";
+            this.titleSizeToolStripMenuItem.Click += new System.EventHandler(this.titleSizeToolStripMenuItem_Click);
+            // 
+            // newFenceToolStripMenuItem
+            // 
+            resources.ApplyResources(this.newFenceToolStripMenuItem, "newFenceToolStripMenuItem");
+            this.newFenceToolStripMenuItem.Name = "newFenceToolStripMenuItem";
+            this.newFenceToolStripMenuItem.Click += new System.EventHandler(this.newFenceToolStripMenuItem_Click);
+            // 
+            // exitToolStripMenuItem
+            // 
+            resources.ApplyResources(this.exitToolStripMenuItem, "exitToolStripMenuItem");
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
             // FenceWindow
             // 
